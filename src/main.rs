@@ -7,6 +7,8 @@ fn main() {
 }
 
 fn real_main() -> i32 {
+    let zip_types = vec!["zip", "rar", "7z", "tar", "gz", "bz2", "xz", "lzma", "cab"];
+
     let mut input = String::new();
 
     println!("Enter the path to the folder you want to unzip: ");
@@ -22,17 +24,24 @@ fn real_main() -> i32 {
         println!("Filename: {}", filename);
         let path = entry.path();
 
-        if path.extension().unwrap() == "zip" {
-            unzip_file(path);
+        if zip_types.contains(&path.extension().unwrap().to_str().unwrap()) {
+            println!(
+                "Found zip file: {}",
+                path.extension().unwrap().to_str().unwrap()
+            );
+            unzip_file(path, &zip_types);
         } else {
-            println!("Found file: {}", path.to_string_lossy());
+            println!(
+                "Found file: {}",
+                path.extension().unwrap().to_str().unwrap()
+            );
         }
     }
 
     return 0;
 }
 
-fn unzip_file(file_path: &Path) {
+fn unzip_file(file_path: &Path, zip_types: &Vec<&str>) {
     println!("Unzipping file: {}", file_path.to_string_lossy());
     let found_archieve = zip::ZipArchive::new(fs::File::open(&file_path).unwrap());
 
@@ -65,8 +74,9 @@ fn unzip_file(file_path: &Path) {
                     let mut outfile = fs::File::create(&outpath).unwrap();
                     std::io::copy(&mut file, &mut outfile).unwrap();
                 }
-                if (&*file.name()).ends_with(".zip") {
-                    unzip_file(&outpath);
+
+                if zip_types.contains(&file.name().split('.').last().unwrap()) {
+                    unzip_file(&outpath, zip_types);
                 }
             }
             fs::remove_file(file_path).unwrap();
